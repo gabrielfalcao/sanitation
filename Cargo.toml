@@ -1,0 +1,14 @@
+[package]
+name = "sanitation"
+version = "0.0.0"
+edition = "2021"
+license = "GPL-3.0-or-later"
+authors = ["Gabriel Falcão <gabriel@nacaolivre.org>"]
+description = "data-types for capturing possibly malicious bytes - primarily intented for buffer-overflows mitigation"
+documentation = "https://docs.rs/sanitation"
+readme = "README.md"
+homepage = "https://github.com/gabrielfalcao/sanitation"
+
+[lib]
+name = "sanitation"
+path = "src/lib.rs"
