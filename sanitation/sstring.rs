@@ -23,10 +23,10 @@
 //! leave open several hidden communication channels throughout SSH
 //! networks.
 //!
-//! In conclusion the entire `sanitation` crate for was devised
-//! because such fact appear to offer opportunities for both
-//! exploiting and protecting covert communication channels within
-//! such not uncommonly used network protocol.
+//! In conclusion the entire `sanitation` crate was devised because
+//! such fact appear to offer opportunities for both exploiting and
+//! protecting covert communication channels within such not
+//! uncommonly used network protocol.
 //!
 //! Putting it simply, SString serves as an effective tool to convert
 //! streams of bytes into valid strings while providing ways to check
@@ -36,7 +36,7 @@
 //! even poorly-secured connections.
 //!
 //! Perhaps more succinctly said, SStrings allow analysing potential
-//! bugs from remote connections, detecting and avoiding common issues
+//! bugs in remote connections, detecting and avoiding common issues
 //! such as attempted buffer-overflow attacks.
 //!
 //! #### Usage Example
