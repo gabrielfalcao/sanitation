@@ -105,7 +105,7 @@ impl SString {
     }
 
     /// `SString::extend_vec` is the principal method of [`SString`]. It takes all valid UTF-8 data from a `Vec<u8>`. It passes invalid remaining UTF-8 data to the `on_utf8_error` closure whose responsibility is to either transform the invalid bytes into a valid String or return [`Utf8Error`].
-    pub fn extend_vec(&mut self, raw: Vec<u8>, mut on_utf8_error: impl OnUtf8Error) {
+    pub fn extend_vec(&mut self, raw: Vec<u8>, mut on_utf8_error: impl FnMut(Vec<u8>, Utf8Error) -> Result<String, Utf8Error>) {
         let mut input = raw.clone();
         self.i.extend(&input);
         loop {
@@ -142,8 +142,8 @@ impl SString {
 
     /// `SString::append` processes a single [`u8`] checking whether is a valid UTF-8 and adding it to the
     /// internal state of the SString instance from which this method is called.
-    /// This method takes a [`OnUtf8Error`] callback, not unlike the [`SString::extend_vec`] method.
-    pub fn append(&mut self, byte: u8, on_utf8_error: impl OnUtf8Error) {
+    /// This method takes a [`FnMut(Vec<u8>, Utf8Error) -> Result<String, Utf8Error>`] callback, not unlike the [`SString::extend_vec`] method.
+    pub fn append(&mut self, byte: u8, on_utf8_error: impl FnMut(Vec<u8>, Utf8Error) -> Result<String, Utf8Error>) {
         self.extend_vec(vec![byte], on_utf8_error)
     }
 
@@ -405,8 +405,6 @@ impl Default for SString {
     }
 }
 
-/// `OnUtf8Error` is a function callback whose purpose is to take a string of non-valid UTF-8 bytes and return either a valid [`String`] or an [`Utf8Error`]
-pub trait OnUtf8Error = FnMut(Vec<u8>, Utf8Error) -> Result<String, Utf8Error>;
 
 #[cfg(test)]
 mod sstring_tests {

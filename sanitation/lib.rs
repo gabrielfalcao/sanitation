@@ -1,7 +1,6 @@
 //! sanitation is a tool for developing memory-safe programs while
 //! detecting and capturing possibly malicious bytes.
 
-#![feature(cfg_overflow_checks, trait_alias)]
 pub mod errors;
 pub mod sboolean;
 pub mod sstring;
