@@ -72,7 +72,7 @@ use std::str::{from_utf8, Utf8Error};
 /// - All valid UTF-8 bytes
 /// - All invalid UTF-8 bytes available for analysis
 /// - A list of 2-item tuples with the start and ends of each chunk of valid UTF-8 found by [`SString::extend_vec`]
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub struct SString {
     g: Vec<u8>,
     p: Vec<(usize, usize)>,

@@ -1,7 +1,7 @@
 [package]
 name = "sanitation"
-version = "1.0.1"
-edition = "2024"
+version = "1.0.2"
+edition = "2021"
 license = "GPL-3.0-or-later"
 authors = ["Gabriel Falcão <gabriel@nacaolivre.org>"]
 description = "tool for developing memory-safe programs while detecting and capturing possibly malicious bytes."
