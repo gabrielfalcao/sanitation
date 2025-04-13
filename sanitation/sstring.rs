@@ -105,7 +105,11 @@ impl SString {
     }
 
     /// `SString::extend_vec` is the principal method of [`SString`]. It takes all valid UTF-8 data from a `Vec<u8>`. It passes invalid remaining UTF-8 data to the `on_utf8_error` closure whose responsibility is to either transform the invalid bytes into a valid String or return [`Utf8Error`].
-    pub fn extend_vec(&mut self, raw: Vec<u8>, mut on_utf8_error: impl FnMut(Vec<u8>, Utf8Error) -> Result<String, Utf8Error>) {
+    pub fn extend_vec(
+        &mut self,
+        raw: Vec<u8>,
+        mut on_utf8_error: impl FnMut(Vec<u8>, Utf8Error) -> Result<String, Utf8Error>,
+    ) {
         let mut input = raw.clone();
         self.i.extend(&input);
         loop {
@@ -143,7 +147,11 @@ impl SString {
     /// `SString::append` processes a single [`u8`] checking whether is a valid UTF-8 and adding it to the
     /// internal state of the SString instance from which this method is called.
     /// This method takes a [`FnMut(Vec<u8>, Utf8Error) -> Result<String, Utf8Error>`] callback, not unlike the [`SString::extend_vec`] method.
-    pub fn append(&mut self, byte: u8, on_utf8_error: impl FnMut(Vec<u8>, Utf8Error) -> Result<String, Utf8Error>) {
+    pub fn append(
+        &mut self,
+        byte: u8,
+        on_utf8_error: impl FnMut(Vec<u8>, Utf8Error) -> Result<String, Utf8Error>,
+    ) {
         self.extend_vec(vec![byte], on_utf8_error)
     }
 
@@ -405,7 +413,6 @@ impl Default for SString {
     }
 }
 
-
 #[cfg(test)]
 mod sstring_tests {
     use crate::{Error, SString};
@@ -430,84 +437,16 @@ mod sstring_tests {
     }
 
     #[test]
-    pub fn test_capture_hospital_run_exploit() {
-        // Example from https://www.exploit-db.com/exploits/51310
-        let hospital_run = vec![
-            0x63, 0x6F, 0x6E, 0x73, 0x74, 0x20, 0x72, 0x65, 0x6E, 0x64, 0x65, 0x72, 0x50, 0x72,
-            0x6F, 0x63, 0x65, 0x73, 0x73, 0x50, 0x72, 0x65, 0x66, 0x65, 0x72, 0x65, 0x6E, 0x63,
-            0x65, 0x73, 0x20, 0x3D, 0x20, 0x70, 0x72, 0x6F, 0x63, 0x65, 0x73, 0x73, 0x2E, 0x61,
-            0x74, 0x6F, 0x6D, 0x42, 0x69, 0x6E, 0x64, 0x69, 0x6E, 0x67, 0x28, 0x27, 0x72, 0x65,
-            0x6E, 0x64, 0x65, 0x72, 0x5F, 0x70, 0x72, 0x6F, 0x63, 0x65, 0x73, 0x73, 0x5F, 0x70,
-            0x72, 0x65, 0x66, 0x65, 0x72, 0x65, 0x6E, 0x63, 0x65, 0x73, 0x27, 0x29, 0x2E, 0x66,
-            0x6F, 0x72, 0x41, 0x6C, 0x6C, 0x57, 0x65, 0x62, 0x43, 0x6F, 0x6E, 0x74, 0x65, 0x6E,
-            0x74, 0x73, 0x28, 0x29,
-        ];
-        let hr = SString::new(&hospital_run);
+    pub fn test_offset() {
+        let bytes = vec![0x0e, 0xff, 0x4e, 0x4f, 0x4f, 0x4e];
+        let offset = SString::new(&bytes);
 
-        assert_eq!(hr.garbage(), vec![]);
-        assert_eq!(&hr.unchecked_safe(), "const renderProcessPreferences = process.atomBinding('render_process_preferences').forAllWebContents()");
-    }
-
-    #[test]
-    pub fn test_capture_maxiguvenlik_general_device_manager() {
-        // Example from https://www.exploit-db.com/exploits/51641
-        let general_device_manager = vec![
-            0xB8, 0x9C, 0x78, 0x14, 0x60, 0xD9, 0xC2, 0xD9, 0x74, 0x24, 0xF4, 0x5A, 0x33, 0xC9,
-            0xB1, 0x31, 0x83, 0xEA, 0xFC, 0x31, 0x42, 0x0F, 0x03, 0x42, 0x93, 0x9A, 0xE1, 0x9C,
-            0x43, 0xD8, 0x0A, 0x5D, 0x93, 0xBD, 0x83, 0xB8, 0xA2, 0xFD, 0xF0, 0xC9, 0x94, 0xCD,
-            0x73, 0x9F, 0x18, 0xA5, 0xD6, 0x34, 0xAB, 0xCB, 0xFE, 0x3B, 0x1C, 0x61, 0xD9, 0x72,
-            0x9D, 0xDA, 0x19, 0x14, 0x1D, 0x21, 0x4E, 0xF6, 0x1C, 0xEA, 0x83, 0xF7, 0x59, 0x17,
-            0x69, 0xA5, 0x32, 0x53, 0xDC, 0x5A, 0x37, 0x29, 0xDD, 0xD1, 0x0B, 0xBF, 0x65, 0x05,
-            0xDB, 0xBE, 0x44, 0x98, 0x50, 0x99, 0x46, 0x1A, 0xB5, 0x91, 0xCE, 0x04, 0xDA, 0x9C,
-            0x99, 0xBF, 0x28, 0x6A, 0x18, 0x16, 0x61, 0x93, 0xB7, 0x57, 0x4E, 0x66, 0xC9, 0x90,
-            0x68, 0x99, 0xBC, 0xE8, 0x8B, 0x24, 0xC7, 0x2E, 0xF6, 0xF2, 0x42, 0xB5, 0x50, 0x70,
-            0xF4, 0x11, 0x61, 0x55, 0x63, 0xD1, 0x6D, 0x12, 0xE7, 0xBD, 0x71, 0xA5, 0x24, 0xB6,
-            0x8D, 0x2E, 0xCB, 0x19, 0x04, 0x74, 0xE8, 0xBD, 0x4D, 0x2E, 0x91, 0xE4, 0x2B, 0x81,
-            0xAE, 0xF7, 0x94, 0x7E, 0x0B, 0x73, 0x38, 0x6A, 0x26, 0xDE, 0x56, 0x6D, 0xB4, 0x64,
-            0x14, 0x6D, 0xC6, 0x66, 0x08, 0x06, 0xF7, 0xED, 0xC7, 0x51, 0x08, 0x24, 0xAC, 0xAE,
-            0x42, 0x65, 0x84, 0x26, 0x0B, 0xFF, 0x95, 0x2A, 0xAC, 0xD5, 0xD9, 0x52, 0x2F, 0xDC,
-            0xA1, 0xA0, 0x2F, 0x95, 0xA4, 0xED, 0xF7, 0x45, 0xD4, 0x7E, 0x92, 0x69, 0x4B, 0x7E,
-            0xB7, 0x09, 0x0A, 0xEC, 0x5B, 0xE0, 0xA9, 0x94, 0xFE, 0xFC,
-        ];
-
-        let gdm = SString::new(&general_device_manager);
-
+        assert_eq!(offset.garbage(), vec![0xff]);
+        assert_eq!(format!("{}", offset), "\u{e}NOON");
+        assert_eq!(offset.unchecked_safe(), "\u{e}NOON");
         assert_eq!(
-            gdm.garbage(),
-            vec![
-                184, 156, 217, 194, 217, 244, 131, 234, 252, 147, 154, 225, 156, 216, 147, 189,
-                131, 184, 162, 253, 240, 205, 159, 165, 214, 171, 203, 254, 217, 157, 218, 246,
-                234, 131, 247, 165, 220, 221, 209, 191, 152, 153, 181, 145, 206, 153, 191, 147,
-                183, 153, 188, 232, 139, 199, 246, 242, 181, 244, 209, 231, 189, 165, 182, 141,
-                203, 232, 189, 145, 228, 129, 174, 247, 148, 222, 180, 198, 247, 237, 199, 172,
-                174, 132, 255, 149, 172, 213, 217, 160, 149, 164, 237, 247, 212, 146, 183, 236,
-                254, 252
-            ]
-        );
-        assert_eq!(format!("{}", gdm),   "x\u{14}`t$Z3ɱ11B\u{f}\u{3}BC\n]ɔs\u{18}4;\u{1c}ar\u{19}\u{14}\u{1d}!N\u{1c}Y\u{17}i2SZ7)\u{b}e\u{5}۾DPF\u{1a}\u{4}ڜ(j\u{18}\u{16}aWNfɐh$.BPp\u{11}aUcm\u{12}q$.\u{19}\u{4}tM.+~\u{b}s8j&Vmd\u{14}mf\u{8}\u{6}Q\u{8}$Be&\u{b}*R/ܡ/E~iK~\t\n[\u{a54}");
-        assert_eq!(gdm.unchecked_safe(), "x\u{14}`t$Z3ɱ11B\u{f}\u{3}BC\n]ɔs\u{18}4;\u{1c}ar\u{19}\u{14}\u{1d}!N\u{1c}Y\u{17}i2SZ7)\u{b}e\u{5}۾DPF\u{1a}\u{4}ڜ(j\u{18}\u{16}aWNfɐh$.BPp\u{11}aUcm\u{12}q$.\u{19}\u{4}tM.+~\u{b}s8j&Vmd\u{14}mf\u{8}\u{6}Q\u{8}$Be&\u{b}*R/ܡ/E~iK~\t\n[\u{a54}");
-        assert_eq!(
-            gdm.safe(),
-            Err(Error::UnsafeString(
-                &[
-                    120, 20, 96, 116, 36, 90, 51, 201, 177, 49, 49, 66, 15, 3, 66, 67, 10, 93, 201,
-                    148, 115, 24, 52, 59, 28, 97, 114, 25, 20, 29, 33, 78, 28, 89, 23, 105, 50, 83,
-                    90, 55, 41, 11, 101, 5, 219, 190, 68, 80, 70, 26, 4, 218, 156, 40, 106, 24, 22,
-                    97, 87, 78, 102, 201, 144, 104, 36, 46, 66, 80, 112, 17, 97, 85, 99, 109, 18,
-                    113, 36, 46, 25, 4, 116, 77, 46, 43, 126, 11, 115, 56, 106, 38, 86, 109, 100,
-                    20, 109, 102, 8, 6, 81, 8, 36, 66, 101, 38, 11, 42, 82, 47, 220, 161, 47, 69,
-                    126, 105, 75, 126, 9, 10, 91, 224, 169, 148
-                ],
-                &[
-                    184, 156, 217, 194, 217, 244, 131, 234, 252, 147, 154, 225, 156, 216, 147, 189,
-                    131, 184, 162, 253, 240, 205, 159, 165, 214, 171, 203, 254, 217, 157, 218, 246,
-                    234, 131, 247, 165, 220, 221, 209, 191, 152, 153, 181, 145, 206, 153, 191, 147,
-                    183, 153, 188, 232, 139, 199, 246, 242, 181, 244, 209, 231, 189, 165, 182, 141,
-                    203, 232, 189, 145, 228, 129, 174, 247, 148, 222, 180, 198, 247, 237, 199, 172,
-                    174, 132, 255, 149, 172, 213, 217, 160, 149, 164, 237, 247, 212, 146, 183, 236,
-                    254, 252
-                ]
-            ))
+            offset.safe(),
+            Err(Error::UnsafeString(&[14, 78, 79, 79, 78], &[255]))
         );
     }
     #[test]

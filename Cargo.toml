@@ -1,9 +1,9 @@
 [package]
 name = "sanitation"
-version = "1.0.2"
+version = "1.0.3"
 edition = "2021"
-license = "GPL-3.0-or-later"
-authors = ["Gabriel Falcão <gabriel@nacaolivre.org>"]
+license = "MIT"
+authors = ["Gabriel Falcão G. DeMoura <gabrielteratos@gmail.com>"]
 description = "tool for developing memory-safe programs while detecting and capturing possibly malicious bytes."
 documentation = "https://docs.rs/sanitation"
 readme = "README.md"

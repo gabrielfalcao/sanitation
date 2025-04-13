@@ -10,6 +10,7 @@ use ::std::string::FromUtf8Error;
 pub enum Error<'a> {
     UnsafeString(&'a [u8], &'a [u8]),
     InvalidUtf8(FromUtf8Error, &'a [u8], &'a [(usize, usize)], &'a [u8], &'a [u8]),
+    ParseError(String),
 }
 
 impl std::fmt::Display for Error<'_> {
@@ -20,6 +21,9 @@ impl std::fmt::Display for Error<'_> {
                 let facets = p.iter().map(|(b, e)| format!("{}-{}", b, e)).collect::<Vec<String>>().join(", ");
                 write!(f, "unsafe byte array conversion to string `{}': {} at locations {{{}}}", e, facets, to_hex(g))
             },
+            Error::ParseError(e) => {
+                write!(f, "ParseError: {}", e)
+            },
         }
     }
 }
@@ -28,5 +32,11 @@ impl std::error::Error for Error<'_> {}
 impl Into<std::io::Error> for Error<'_> {
     fn into(self) -> std::io::Error {
         std::io::Error::new(std::io::ErrorKind::InvalidData, format!("{}", self))
+    }
+}
+
+impl From<std::num::ParseIntError> for Error<'_> {
+    fn from(e: std::num::ParseIntError) -> Self {
+        Error::ParseError(e.to_string())
     }
 }
