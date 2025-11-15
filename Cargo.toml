@@ -11,4 +11,4 @@ homepage = "https://github.com/gabrielfalcao/sanitation"
 
 [lib]
 name = "sanitation"
-path = "sanitation/lib.rs"
+path = "src/lib.rs"
