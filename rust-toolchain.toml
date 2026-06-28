@@ -1,0 +1,31 @@
+[toolchain]
+channel = "nightly-2026-06-24"
+
+components = [
+"rust-src",
+"rust-std",
+"rustc-dev",
+"rustfmt",
+"llvm-tools-preview",
+"rust-docs",
+
+# "clippy",
+# "llvm-bitcode-linker",
+# "rust-std-wasm32-unknown-emscripten",
+# "rust-std-wasm32-unknown-unknown",
+# "rust-analysis",
+# "rust-analyzer",
+# "rustc-codegen-cranelift",
+# "rust-docs-json",
+
+
+]
+# https://openwrt.org/toh/gl.inet/gl-mt1300_v1
+# https://firmware-selector.openwrt.org/?version=25.12.3
+targets = [
+    "aarch64-apple-darwin",
+    # "aarch64-unknown-linux-gnu",
+    # "x86_64-unknown-linux-gnu",
+
+    # "mipsel-unknown-linux-musl",
+]
