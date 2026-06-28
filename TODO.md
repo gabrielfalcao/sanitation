@@ -7,4 +7,4 @@
   replaces all non-utf8 bytes with their hexadecimal representation
   syntax-highlighted. this program can then be used to debug the
   output of ``man gawk`` so that one easily see why the output of
-  ``man gawk | ansistrip | bat`` displays weird duplicated chars
+  ``man gawk | ansistrip | bat`` or ``man git-cherry-pick | ansistrip | bat``  displays weird duplicated chars
