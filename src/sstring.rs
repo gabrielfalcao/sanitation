@@ -174,10 +174,14 @@ impl SString {
             Ok(string) => Ok(string),
             Err(e) => {
                 if self.has_garbage() {
-                    Err(crate::Error::UnsafeString(&self.s, &self.g))
+                    Err(crate::Error::UnsafeString(self.s.clone(), self.g.clone()))
                 } else {
                     Err(crate::Error::InvalidUtf8(
-                        e, &self.g, &self.p, &self.i, &self.s,
+                        e,
+                        self.g.clone(),
+                        self.p.clone(),
+                        self.i.clone(),
+                        self.s.clone(),
                     ))
                 }
             }
@@ -446,7 +450,7 @@ mod sstring_tests {
         assert_eq!(offset.unchecked_safe(), "\u{e}NOON");
         assert_eq!(
             offset.safe(),
-            Err(Error::UnsafeString(&[14, 78, 79, 79, 78], &[255]))
+            Err(Error::UnsafeString(vec![14, 78, 79, 79, 78], vec![255]))
         );
     }
     #[test]

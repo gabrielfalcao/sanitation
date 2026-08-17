@@ -69,7 +69,7 @@ pub fn from_hex(hex: &str) -> Result<Vec<u8>, crate::Error> {
 }
 
 #[test]
-fn test_from_hex() -> Result<(), crate::Error<'static>> {
+fn test_from_hex() -> Result<(), crate::Error> {
     assert_eq!(from_hex("0x0")?, vec![0u8]);
     assert_eq!(
         from_hex("0xffffffffffffffff")?,
