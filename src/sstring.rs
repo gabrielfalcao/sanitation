@@ -104,44 +104,55 @@ impl SString {
         }
     }
 
-    /// `SString::extend_vec` is the principal method of [`SString`]. It takes all valid UTF-8 data from a `Vec<u8>`. It passes invalid remaining UTF-8 data to the `on_utf8_error` closure whose responsibility is to either transform the invalid bytes into a valid String or return [`Utf8Error`].
+    /// `SString::extend_iter` is the principal method of
+    /// [`SString`]. It takes all valid UTF-8 data from an iterator,
+    /// passing invalid remaining UTF-8 data to the `on_utf8_error`
+    /// closure whose responsibility is to either transform the
+    /// invalid bytes into a valid String or return [`Utf8Error`].
+    pub fn extend_iter<
+        T: Into<u8>,
+        I: Iterator<Item = T>,
+        F: FnMut(Vec<u8>, Utf8Error) -> Result<String, Utf8Error>,
+    >(
+        &mut self,
+        iter: I,
+        mut on_utf8_error: F,
+    ) {
+        let mut input = iter.map(|c| c.into()).collect::<Vec<u8>>();
+        self.i.extend(&input);
+        match from_utf8(&input) {
+            Ok(valid) => {
+                self.s.extend(valid.as_bytes());
+            }
+            Err(error) => match on_utf8_error(input.clone(), error) {
+                Ok(valid) => {
+                    self.s.extend(valid.as_bytes());
+                }
+                Err(error) => {
+                    let (valid, after_valid) = input.split_at(error.valid_up_to());
+                    self.s.extend(valid);
+
+                    if let Some(error_len) = error.error_len() {
+                        let valid_start = error.valid_up_to();
+                        let valid_end = valid_start + error_len;
+
+                        self.p.insert(0, (valid_start, valid_end));
+                        let bytes = &mut input[valid_start..valid_end].to_vec();
+                        self.g.extend(&mut bytes.iter());
+                        input = after_valid[error_len..].to_vec();
+                    }
+                }
+            },
+        }
+    }
+
+    /// `SString::extend_vec` extends a [`SString`] via `SString::extend_iter`
     pub fn extend_vec(
         &mut self,
         raw: Vec<u8>,
         mut on_utf8_error: impl FnMut(Vec<u8>, Utf8Error) -> Result<String, Utf8Error>,
     ) {
-        let mut input = raw.clone();
-        self.i.extend(&input);
-        loop {
-            match from_utf8(&input) {
-                Ok(valid) => {
-                    self.s.extend(valid.as_bytes());
-                    break;
-                }
-                Err(error) => match on_utf8_error(input.clone(), error) {
-                    Ok(valid) => {
-                        self.s.extend(valid.as_bytes());
-                        break;
-                    }
-                    Err(error) => {
-                        let (valid, after_valid) = input.split_at(error.valid_up_to());
-                        self.s.extend(valid);
-
-                        if let Some(error_len) = error.error_len() {
-                            let valid_start = error.valid_up_to();
-                            let valid_end = valid_start + error_len;
-
-                            self.p.insert(0, (valid_start, valid_end));
-                            let bytes = &mut input[valid_start..valid_end].to_vec();
-                            self.g.extend(&mut bytes.iter());
-                            input = after_valid[error_len..].to_vec();
-                        } else {
-                            break;
-                        }
-                    }
-                },
-            }
-        }
+        self.extend_iter(raw.into_iter(), on_utf8_error)
     }
 
     /// `SString::append` processes a single [`u8`] checking whether is a valid UTF-8 and adding it to the
@@ -152,7 +163,7 @@ impl SString {
         byte: u8,
         on_utf8_error: impl FnMut(Vec<u8>, Utf8Error) -> Result<String, Utf8Error>,
     ) {
-        self.extend_vec(vec![byte], on_utf8_error)
+        self.extend_iter([byte].into_iter(), on_utf8_error)
     }
 
     /// `SString::push` processes a single [`u8`] checking whether is a valid UTF-8 and adding it to the internal state of the SString instance from which this method is called.
@@ -169,7 +180,7 @@ impl SString {
     /// occasions where one resolves to produce a string comprised of
     /// all contiguous valid UTF-8 bytes fed into a SString's
     /// instance.
-    pub fn safe(&self) -> Result<String, Error> {
+    pub fn safe(&self) -> Result<String, Error<'_>> {
         match String::from_utf8(self.i.clone()) {
             Ok(string) => Ok(string),
             Err(e) => {
@@ -266,7 +277,7 @@ impl Into<Cow<'static, str>> for SString {
 
 impl<'s> Into<&'s str> for SString {
     fn into(self) -> &'s str {
-        self.unchecked_safe().leak()
+        self.unchecked_safe().as_mut()
     }
 }
 
@@ -413,6 +424,16 @@ impl Default for SString {
     }
 }
 
+impl std::fmt::Debug for SString {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
+        write!(
+            f,
+            "SString({} total bytes, {} valid bytes)",
+            self.i.len(),
+            self.s.len()
+        )
+    }
+}
 #[cfg(test)]
 mod sstring_tests {
     use crate::{Error, SString};
@@ -477,5 +498,48 @@ mod sstring_tests {
         let vecs: Vec<Vec<u8>> = vec![vec![0xFF, 0x7E], vec![0xF0, 0x3F, 0xF0], vec![0x7E, 0xFF]];
         let sstring = vecs.iter().map(|bytes| bytes.clone()).collect::<SString>();
         assert_eq!(sstring.unchecked_safe(), "~?~");
+    }
+
+    #[test]
+    pub fn test_sstring_extend_vec() {
+        let bytes: Vec<u8> = vec![
+            0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64,
+        ];
+        let mut sstring = SString::empty();
+        sstring.extend_vec(bytes, |bytes, _error|std::str::from_utf8(&bytes).map(|s|s.to_string()));
+        assert_eq!(format!("{sstring}"), "Hello World");
+    }
+
+    #[test]
+    pub fn test_sstring_extend_iter() {
+        let bytes: Vec<u8> = [
+            0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64,
+        ].to_vec();
+        let mut sstring = SString::empty();
+        sstring.extend_iter(bytes.into_iter(), |bytes, error| {
+            std::str::from_utf8(&bytes).map(|s| s.to_string())
+        });
+        assert_eq!(sstring.to_string(), "Hello World");
+    }
+
+    #[test]
+    pub fn test_sstring_fmt_debug() {
+        let bytes: Vec<u8> = vec![
+            0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64,
+        ];
+        let sstring = bytes.iter().collect::<SString>();
+        assert_eq!(
+            format!("{sstring:#?}"),
+            "SString(11 total bytes, 11 valid bytes)"
+        );
+    }
+
+    #[test]
+    pub fn test_sstring_fmt_display() {
+        let bytes: Vec<u8> = vec![
+            0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64,
+        ];
+        let sstring = bytes.iter().collect::<SString>();
+        assert_eq!(format!("{sstring}"), "Hello World");
     }
 }

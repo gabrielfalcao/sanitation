@@ -7,7 +7,7 @@ use std::ffi::OsString;
 /// The `SafeString` trait is useful for converting from various string-related types into [`SString`].
 pub trait SafeString: Into<SString> + Clone {
     fn as_str(self) -> &'static str {
-        Into::<SString>::into(self).unchecked_safe().leak()
+        Into::<SString>::into(self).unchecked_safe().as_mut()
     }
     fn into_bytes(&self) -> Vec<u8> {
         self.clone().as_str().as_bytes().to_vec()
@@ -16,7 +16,7 @@ pub trait SafeString: Into<SString> + Clone {
 
 impl SafeString for SString {
     fn as_str(self) -> &'static str {
-        self.unchecked_safe().leak()
+        self.unchecked_safe().as_mut()
     }
 }
 

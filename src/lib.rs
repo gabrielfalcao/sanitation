@@ -26,7 +26,7 @@ fn test_to_hex() {
     assert_eq!(to_hex(&bytes), "0xf053755265");
 }
 
-pub fn from_hex(hex: &str) -> Result<Vec<u8>, crate::Error> {
+pub fn from_hex(hex: &str) -> Result<Vec<u8>, crate::Error<'_>> {
     if hex.is_empty() {
         return Err(crate::Error::ParseError(
             "empty hexadecimal string".to_string(),
