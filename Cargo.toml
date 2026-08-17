@@ -1,6 +1,6 @@
 [package]
 name = "sanitation"
-version = "1.0.3"
+version = "1.1.0"
 edition = "2024"
 license = "MIT"
 authors = ["Gabriel Falcão G. DeMoura <gabrielteratos@gmail.com>"]
